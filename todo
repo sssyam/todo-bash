@@ -1,0 +1,84 @@
+#! /bin/bash
+
+
+init(){
+    if [ "x" != "x${HOME}" ]
+    then 
+        echo "HOME environment is not defined"
+        exit 1
+    fi
+
+    WORKDIR="${HOME}/Documents/TODOLists"
+    mkdir -p ${WORKDIR}
+    FILENAME="${WORKDIR}/TODO-`date +'%Y-%m-%d'`"
+}
+
+help(){
+	echo "Usage: `basename $0` <option>"
+	echo "Options:"
+	echo "      create            Create a todo list for today"
+	echo "      list              List the todo list for today"
+	echo "      edit              Edit the todays todo list"
+	echo "      history           List last 7 todo list"
+	echo "      history <date>    Show the todo list for date ( YYYY-MM-DD )"
+	echo "      search <text>     Search the <text> in TODO List"
+    echo "      help              Show this help"
+    echo ""
+}
+
+main(){
+	input=$1
+	case $input in	
+		create) if [ ! -f ${FILENAME} ]
+				then 
+				 	vim -o ${FILENAME}
+				else 
+					echo "TODO exists for today, use option 'edit'"
+				fi
+				;;
+
+	  	list)   if [ ! -f ${FILENAME} ]
+		  		then 
+					echo "No TODO for today"; 
+				else 
+					cat ${FILENAME}
+				fi 
+				;;
+
+	  	edit)   if [ -f ${FILENAME} ]
+		  		then 
+					vim -o ${FILENAME}
+				else 
+					echo "No TODO for today, please use option 'create' to create it"
+				fi
+				;;
+	    history)	
+                DATE="$2"
+				FILE="${WORKDIR}/TODO-$DATE"
+				
+				ls -al ${FILE} 1> /dev/null 2>/dev/null
+				if [ $? -ne 0 ]
+				then
+					ls -ltr ${WORKDIR} | tail -n 7
+					exit 0
+				fi
+				cat $FILE
+		  		;;
+        search) if [ $# -ne 2 ]
+                then
+                    usage 
+                    exit 1
+                else
+                    grep -rni "$2" ${WORKDIR}
+                fi
+                ;;
+		test)   echo ${FILENAME}; 
+		  		ls -al ${FILENAME}
+				;;
+	    *)      help 
+                ;;
+	esac	
+}
+
+init
+main "$@"
